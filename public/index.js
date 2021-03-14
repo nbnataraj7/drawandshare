@@ -1,12 +1,9 @@
 window.onload = function () {
     let socket = io();
-
-    let form = document.getElementById("form");
-    let input = document.getElementById("input");
-    let messages = document.getElementById("messages");
     let canvas = document.getElementById("canvas")
     let ctx = canvas.getContext('2d');
     let reset = document.getElementById("reset");
+    let isMouseDown = false;
 
     reset.addEventListener("click", clearCanvas);
 
@@ -26,20 +23,34 @@ window.onload = function () {
     }
 
     window.onmousedown = function (e) {
+        isMouseDown = true;
         if (e.target.id == "reset") return;
         plots.push({
             start: {
-                x: e.clientX,
-                y: e.clientY
+                x: e.clientX - getCanvasOffset().x,
+                y: e.clientY - getCanvasOffset().y
             }
         });
     }
 
+    window.onmousemove = function (e) {
+        if (isMouseDown) {
+            if (e.target.id == "reset") return;
+            plots[plots.length - 1].end = {
+                x: e.clientX - getCanvasOffset().x,
+                y: e.clientY - getCanvasOffset().y
+            };
+            render();
+            broadcastDrawing();
+        }
+    }
+
     window.onmouseup = function (e) {
+        isMouseDown = false;
         if (e.target.id == "reset") return;
         plots[plots.length - 1].end = {
-            x: e.clientX,
-            y: e.clientY
+            x: e.clientX - getCanvasOffset().x,
+            y: e.clientY - getCanvasOffset().y
         };
         render();
         broadcastDrawing();
@@ -47,10 +58,7 @@ window.onload = function () {
 
     function render() {
         ctx.beginPath();
-        if (plots.length == 0) {
-            ctx.clearRect(0, 0, 500, 500);
-            return;
-        }
+        ctx.clearRect(0, 0, 500, 500);
         plots.forEach(i => {
             ctx.moveTo(i.start.x, i.start.y);
             ctx.lineTo(i.end.x, i.end.y);
@@ -66,5 +74,12 @@ window.onload = function () {
 
     function broadcastDrawing() {
         socket.emit('drawing', plots);
+    }
+
+    function getCanvasOffset() {
+        return {
+            x: canvas.getBoundingClientRect().x,
+            y: canvas.getBoundingClientRect().y
+        }
     }
 }
