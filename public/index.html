@@ -15,13 +15,29 @@
     <div class="container">
         <div class="box">
             <canvas id="canvas" height="500px" width="500px"></canvas>
-            <div class="btn btn-reset" id="reset">Reset</div>
+            <div class="toolbox">
+                <div class="btn btn-reset" id="reset">Reset</div>
+                <div class="color-palette">
+                    <div class="color" data-color="#e74c3c" style="background-color: #e74c3c;">
+                    </div>
+                    <div class="color" data-color="#1abc9c" style="background-color: #1abc9c;">
+                    </div>
+                    <div class="color" data-color="#f1c40f" style="background-color: #f1c40f;">
+                    </div>
+                    <div class="color" data-color="#9b59b6" style="background-color: #9b59b6;">
+                    </div>
+                    <div class="color" data-color="#3498db" style="background-color: #3498db;">
+                    </div>
+                    <div class="color selected" data-color="#3498db"
+                        style="background-color: #34495e;">
+                    </div>
+                    <div class="color" data-color="#f39c12" style="background-color: #f39c12;">
+                    </div>
+                </div>
+                <input value="2" type="number" id="lineWidth" min="1" max="8" />
+            </div>
         </div>
     </div>
-    <!-- <ul id="messages"></ul> -->
-    <!-- <form id="form" action="">
-        <input id="input" autocomplete="off" /><button>Send</button>
-    </form> -->
 </body>
 
 </html>

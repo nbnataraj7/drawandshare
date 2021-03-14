@@ -3,9 +3,26 @@ window.onload = function () {
     let canvas = document.getElementById("canvas")
     let ctx = canvas.getContext('2d');
     let reset = document.getElementById("reset");
-    let isMouseDown = false;
+    let colorBtns = document.querySelectorAll(".color");
+    let lineWidthInput = document.querySelector("input[id=lineWidth]");
 
+    //Properties
+    let isMouseDown = false;
+    let config = {
+        color: "#34495e",
+        width: 2
+    };
+
+    //Attach events
     reset.addEventListener("click", clearCanvas);
+    colorBtns.forEach(cbtn => {
+        cbtn.addEventListener("click", (e) => {
+            config.color = e.target.getAttribute("data-color");
+        });
+    });
+    lineWidthInput.addEventListener("change", (e) => {
+        config.width = e.target.value;
+    });
 
     let plots = [];
 
@@ -24,8 +41,10 @@ window.onload = function () {
 
     window.onmousedown = function (e) {
         isMouseDown = true;
-        if (e.target.id == "reset") return;
+        if (!isTargetCanvas(e)) return;
         plots.push({
+            color: `${config.color}`,
+            width: parseInt(config.width),
             start: {
                 x: e.clientX - getCanvasOffset().x,
                 y: e.clientY - getCanvasOffset().y
@@ -35,7 +54,7 @@ window.onload = function () {
 
     window.onmousemove = function (e) {
         if (isMouseDown) {
-            if (e.target.id == "reset") return;
+            if (!isTargetCanvas(e)) return;
             plots[plots.length - 1].end = {
                 x: e.clientX - getCanvasOffset().x,
                 y: e.clientY - getCanvasOffset().y
@@ -47,7 +66,7 @@ window.onload = function () {
 
     window.onmouseup = function (e) {
         isMouseDown = false;
-        if (e.target.id == "reset") return;
+        if (!isTargetCanvas(e)) return;
         plots[plots.length - 1].end = {
             x: e.clientX - getCanvasOffset().x,
             y: e.clientY - getCanvasOffset().y
@@ -56,13 +75,23 @@ window.onload = function () {
         broadcastDrawing();
     }
 
+    function isTargetCanvas(e) {
+        if (e && e.target && e.target.id == "canvas") {
+            return true;
+        }
+        return false;
+    }
+
     function render() {
-        ctx.beginPath();
         ctx.clearRect(0, 0, 500, 500);
-        plots.forEach(i => {
+        plots.forEach(function (i) {
+            ctx.beginPath();
             ctx.moveTo(i.start.x, i.start.y);
             ctx.lineTo(i.end.x, i.end.y);
+            ctx.lineWidth = i.width;
+            ctx.strokeStyle = i.color;
             ctx.stroke();
+            ctx.closePath();
         });
     }
 
@@ -82,4 +111,6 @@ window.onload = function () {
             y: canvas.getBoundingClientRect().y
         }
     }
+
+
 }
