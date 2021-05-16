@@ -1,14 +1,28 @@
 window.onload = function () {
     let socket = io();
-
-    let form = document.getElementById("form");
-    let input = document.getElementById("input");
-    let messages = document.getElementById("messages");
     let canvas = document.getElementById("canvas")
     let ctx = canvas.getContext('2d');
     let reset = document.getElementById("reset");
+    let colorBtns = document.querySelectorAll(".color");
+    let lineWidthInput = document.querySelector("input[id=lineWidth]");
 
+    //Properties
+    let isMouseDown = false;
+    let config = {
+        color: "#34495e",
+        width: 2
+    };
+
+    //Attach events
     reset.addEventListener("click", clearCanvas);
+    colorBtns.forEach(cbtn => {
+        cbtn.addEventListener("click", (e) => {
+            config.color = e.target.getAttribute("data-color");
+        });
+    });
+    lineWidthInput.addEventListener("change", (e) => {
+        config.width = e.target.value;
+    });
 
     let plots = [];
 
@@ -26,35 +40,58 @@ window.onload = function () {
     }
 
     window.onmousedown = function (e) {
-        if (e.target.id == "reset") return;
+        isMouseDown = true;
+        if (!isTargetCanvas(e)) return;
         plots.push({
+            color: `${config.color}`,
+            width: parseInt(config.width),
             start: {
-                x: e.clientX,
-                y: e.clientY
+                x: e.clientX - getCanvasOffset().x,
+                y: e.clientY - getCanvasOffset().y
             }
         });
     }
 
+    window.onmousemove = function (e) {
+        if (isMouseDown) {
+            if (!isTargetCanvas(e)) return;
+            plots[plots.length - 1].end = {
+                x: e.clientX - getCanvasOffset().x,
+                y: e.clientY - getCanvasOffset().y
+            };
+            render();
+            broadcastDrawing();
+        }
+    }
+
     window.onmouseup = function (e) {
-        if (e.target.id == "reset") return;
+        isMouseDown = false;
+        if (!isTargetCanvas(e)) return;
         plots[plots.length - 1].end = {
-            x: e.clientX,
-            y: e.clientY
+            x: e.clientX - getCanvasOffset().x,
+            y: e.clientY - getCanvasOffset().y
         };
         render();
         broadcastDrawing();
     }
 
-    function render() {
-        ctx.beginPath();
-        if (plots.length == 0) {
-            ctx.clearRect(0, 0, 500, 500);
-            return;
+    function isTargetCanvas(e) {
+        if (e && e.target && e.target.id == "canvas") {
+            return true;
         }
-        plots.forEach(i => {
+        return false;
+    }
+
+    function render() {
+        ctx.clearRect(0, 0, 500, 500);
+        plots.forEach(function (i) {
+            ctx.beginPath();
             ctx.moveTo(i.start.x, i.start.y);
             ctx.lineTo(i.end.x, i.end.y);
+            ctx.lineWidth = i.width;
+            ctx.strokeStyle = i.color;
             ctx.stroke();
+            ctx.closePath();
         });
     }
 
@@ -67,4 +104,13 @@ window.onload = function () {
     function broadcastDrawing() {
         socket.emit('drawing', plots);
     }
+
+    function getCanvasOffset() {
+        return {
+            x: canvas.getBoundingClientRect().x,
+            y: canvas.getBoundingClientRect().y
+        }
+    }
+
+
 }
