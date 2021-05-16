@@ -10,7 +10,7 @@ app.get('/', (req, res) => {
 
 app.use('/', express.static(path.join(__dirname, '/public')));
 
-io.on('connection', (socket) => {
+io.on('connection', (socket) => {//WS
     console.log("A user connected");
     socket.on('drawing', (msg) => {
         console.log(`Message recieved : ${msg}`);
